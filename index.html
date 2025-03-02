@@ -1,0 +1,147 @@
+<!--
+
+Formule voor path om een vierkant met rondingen uit een hoek van een card te snijden.
+
+Dit zijn de path commands die gebruikt worden:
+    M = Move to (x, y)
+    Q = Bezier Curve (control point x, control point y, end point x, end point y)
+    H = Horizontal line (end point x)
+    V = Vertical line (end point y)
+    Z = Close path
+
+Benodigde variabelen in pixels:
+    W = width
+    H = height
+    R = radius
+
+Uitgeschreven path:
+    M: x:0 y:(H + R)
+    Q: cx:0 cy:H x:R y:H
+    H: x:(W - R)
+    Q: cx:W cy:H x:W y:(H - R)
+    V: y:R
+    Q: cx:W cy:0 x:(W + R) y:0
+
+We eindigen met het volgende om de path te sluiten en de resterende card te vullen.
+We gooien, na het einde van de path, de lijn volledig naar rechts, dan naar beneden, dan weer terug naar links en dan sluiten we 'm.
+(Hiermee kan de card alleen niet groter zijn dan 6000px in de hoogte en breedte, dit kan aangepast worden)
+    H: x:6000
+    V: y:6000
+    H: x:0
+    Z
+
+Om de uitgesneden hoek naar de juiste kant te brengen kunnen we de card rotaten of flippen en de children weer terug rotaten of flippen.
+
+Formatted path:
+    clip-path: path("M 0 {H + R} Q 0 {H} {R} {H} H {W - R} Q {W} {H} {W} {H - R} V {R} Q {W} 0 {W + R} 0 H 6000 V 6000 H 0 Z");
+
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://kit.fontawesome.com/7213ffd83f.js" crossorigin="anonymous"></script>
+</head>
+
+<style>
+    body {
+        width: 90vw;
+        height: 90vh;
+        display: grid;
+        place-items: center;
+    }
+
+    .card {
+        width: 300px;
+        position: relative;
+        aspect-ratio: 1/1.5;
+        overflow: hidden;
+        border-radius: 10px;
+    }
+
+    .card__clipped-container {
+        width: 100%;
+        height: 100%;
+        transition: clip-path 1s;
+        /*clip-path: path("M 0 60 Q 0 50 10 50 H 40 Q 50 50 50 40 V 10 Q 50 0 60 0 H 6000 V 6000 H 0 Z");*/
+        transform: rotate(180deg);
+    }
+
+    .clip__content {
+        transform: rotate(-180deg);
+        object-fit: cover;
+        height: 100%;
+    }
+
+    .card__caption-container {
+        padding: 10px;
+        position: absolute;
+        display: flex;
+        gap: 10px;
+        overflow: hidden;
+        flex-direction: row;
+        justify-content: end;
+        align-items: center;
+        bottom: 0;
+        right: 0;
+    }
+
+    .card__caption {
+        margin: 0;
+        padding: 0;
+        color: black;
+        font-weight: 700;
+    }
+</style>
+
+<body>
+    <div class="card">
+        <div class="card__clipped-container">
+            <img class="clip__content" alt="" src="https://thumbs.dreamstime.com/b/wombat-holding-australia-vombatus-ursinus-de-armen-van-een-ranger-foetale-positie-closeup-masupial-volwassen-australian-170874210.jpg">
+        </div>
+        <div class="card__caption-container">
+
+                WOMBAAATTT
+
+        </div>
+    </div>
+</body>
+
+<script>
+    function getDimensions(element) {
+        const { width, height } = element.getBoundingClientRect();
+        return { width, height };
+    }
+
+    function getRadius(element) {
+        return parseFloat(window.getComputedStyle(element).borderRadius);
+    }
+
+    function generatePath(width, height, radius) {
+        return `M 0 ${height + radius} Q 0 ${height} ${radius} ${height} H ${width - radius} Q ${width} ${height} ${width} ${height - radius} V ${radius} Q ${width} 0 ${width + radius} 0 H 6000 V 6000 H 0 Z`
+    }
+
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach((card) => {
+        const captionContainer = card.querySelector('.card__caption-container');
+        const clippedContainers = card.querySelectorAll('.card__clipped-container');
+
+        let cardRadius = getRadius(card);
+        let captionDimensions = getDimensions(captionContainer);
+        let path = generatePath(captionDimensions.width, captionDimensions.height, cardRadius);
+
+        clippedContainers.forEach((container) => {
+            container.style.clipPath = `path("${path}")`
+        });
+    });
+
+
+
+
+</script>
+
+</html>
